@@ -6,95 +6,72 @@ import ReactDOM from 'react-dom'
 import ReactPaginate from 'react-paginate';
 import CSVReader from 'react-csv-reader'
 import data from "./data.json"
-
-
-
-
-
-
-function Items({ currentItems }) {
-  if (!Array.isArray(currentItems)) {
-    return null
-  }
-
-  // return <pre>{JSON.stringify(currentItems)}</pre>
-  return <>{currentItems.map((video) => <><div style={{ display: 'flex', flexDirection: 'column' }}>
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
+import { useNavigate, useLocation } from "react-router-dom";
+import queryString from 'query-string'
+import Box from "@mui/material/Box"
+function VideoItem({ video }) {
+  const [comment, setComment] = useState('')
+  return <><div style={{ display: 'flex', flexDirection: 'column' }}>
 
     <h2>occurance Id: {video.occurrenceId}-----{video.mediaId}</h2>
-    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+    <Box display="flex" flexDirection="row" alignItems="center" gap={2}>
       <video width="30%" height="500" controls>
         <source src={video.source} />
       </video>
-      <div style={{minWidth: '5%'}}/>
+
       <video width="30%" height="500" controls>
         <source src={video.originating_video_url} />
       </video>
-      <div style={{width: '30%'}}>
-      <pre>{JSON.stringify(video, null, 2)}</pre>
+      <div style={{ width: '30%' }}>
+        <pre>{JSON.stringify(video, null, 2)}</pre>
       </div>
-    </div>
+
+    </Box>
+
   </div>
+    <input type="textarea" onChange={(e) => {
+      setComment(e.target.value)
+    }} />
     <div style={{ minHeight: '50px' }} />
-  </>)}</>
+  </>
 }
 
-
-function PaginatedItems({ itemsPerPage }) {
-  // We start with an empty list of items.
-  const [currentItems, setCurrentItems] = useState(null);
-  const [pageCount, setPageCount] = useState(0);
-  // Here we use item offsets; we could also use page offsets
-  // following the API or data you're working with.
-  const [itemOffset, setItemOffset] = useState(0);
-
-  useEffect(() => {
-    // Fetch items from another resources.
-    const endOffset = itemOffset + itemsPerPage;
-    console.log(`Loading items from ${itemOffset} to ${endOffset}`);
-    setCurrentItems(data.slice(itemOffset, endOffset));
-    setPageCount(Math.ceil(data.length / itemsPerPage));
-  }, [itemOffset, itemsPerPage]);
-
-  // Invoke when user click to request another page.
-  const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % data.length;
-    console.log(
-      `User requested page number ${event.selected}, which is offset ${newOffset}`
-    );
-    setItemOffset(newOffset);
-  };
-
-  return (
-    <>
-      {/* <pre>{JSON.stringify(currentItems, null, 2)}</pre> */}
-      <Items currentItems={currentItems} />
-      <ReactPaginate
-        breakLabel="..."
-        nextLabel="next >"
-        onPageChange={handlePageClick}
-        pageRangeDisplayed={5}
-        pageCount={pageCount}
-        previousLabel="< previous"
-        renderOnZeroPageCount={null}
-      />
-    </>
-  );
-}
+const getPaginatedData = (currentPage = 1, dataLimit = 10) => {
+  const startIndex = currentPage * dataLimit - dataLimit;
+  const endIndex = startIndex + dataLimit;
+  return data.slice(startIndex, endIndex);
+};
 function App() {
-  return (
-    <div className="App">
-      {/* <header className="App-header" >
-        {
-          data.map(({ source, originating_video_url }) => {
-            return <><div style={{ display: 'flex', flexDirection: 'row' }}>
-              <ReactPlayer url={source} /> <ReactPlayer url={originating_video_url} />
-            </div>
-              <div style={{ minHeight: '50px' }} /></>
-          })
-        }
+  
+  const navigate = useNavigate()
+  const location = useLocation()
 
-      </header> */}
-      <PaginatedItems itemsPerPage={4} />
+  const { page } = queryString.parse(location.search)
+  const currentPage = page || 1
+  return (
+    <div className="App" style={{ maxWidth: '100vw' }}>
+      {/* <pre>{JSON.stringify(getPaginatedData(currentPage), null, 2)}</pre> */}
+
+      {
+        getPaginatedData(currentPage).map(video => <VideoItem video={video} />)
+      }
+
+      <Stack spacing={2}>
+        <Box display="flex" justifyContent="center">
+          <Pagination count={Math.ceil(data.length / 10)}
+            defaultPage={page || 1}
+            variant="outlined"
+            onChange={
+              (event, page) => {
+                navigate(`/?page=${page}`)
+              }
+            }
+            color="primary"
+          />
+        </Box>
+      </Stack>
     </div>
   );
 }
