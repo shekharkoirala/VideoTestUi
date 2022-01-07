@@ -12,18 +12,23 @@ import { useNavigate, useLocation } from "react-router-dom";
 import queryString from 'query-string'
 import Box from "@mui/material/Box"
 function VideoItem({ video }) {
-  const [comment, setComment] = useState('')
+  const [sourceUrl,setSourceUrl] = useState('')
+  const [originatingUrl, setOriginatingUrl] = useState('')
+  useEffect(() => {
+    setSourceUrl(video.source)
+    setOriginatingUrl(video.originating_video_url)
+  }, [video])
   return <><div style={{ display: 'flex', flexDirection: 'column' }}>
 
     <h2>occurance Id: {video.occurrenceId}-----{video.mediaId}</h2>
     <Box display="flex" flexDirection="row" alignItems="center" gap={2}>
-      <video width="30%" height="500" controls>
-        <source src={video.source} />
-      </video>
+     {sourceUrl &&  <video width="30%" height="500" controls>
+        <source src={sourceUrl} />
+      </video>}
 
-      <video width="30%" height="500" controls>
-        <source src={video.originating_video_url} />
-      </video>
+      {originatingUrl && <video width="30%" height="500" controls>
+        <source src={originatingUrl} />
+      </video>}
       <div style={{ width: '30%' }}>
         <pre>{JSON.stringify(video, null, 2)}</pre>
       </div>
@@ -31,9 +36,7 @@ function VideoItem({ video }) {
     </Box>
 
   </div>
-    <input type="textarea" onChange={(e) => {
-      setComment(e.target.value)
-    }} />
+   
     <div style={{ minHeight: '50px' }} />
   </>
 }
@@ -50,6 +53,7 @@ function App() {
 
   const { page } = queryString.parse(location.search)
   const currentPage = page || 1
+  useEffect(() => {}, [page, location])
   return (
     <div className="App" style={{ maxWidth: '100vw' }}>
       {/* <pre>{JSON.stringify(getPaginatedData(currentPage), null, 2)}</pre> */}
